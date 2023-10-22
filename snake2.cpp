@@ -284,4 +284,8 @@ int main()
     delwin(scoreW);
     endwin();
     return 0;
+    
 }
+
+
+// this is a update
