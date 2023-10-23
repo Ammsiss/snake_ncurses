@@ -142,6 +142,57 @@ bool outOfBounds(int y, int x, std::deque<Snake> snake)
     }
 }
 
+void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput)
+{
+    mvwprintw(gameW, snake[snake.size() - 1].snakeY, snake[snake.size() - 1].snakeX, " ");
+
+    for (int iTwo{1}; iTwo <= snake.size() - 1; ++iTwo)
+    {
+        snake[iTwo].snakeY = snake[iTwo - 1].snakeY;
+        snake[iTwo].snakeX = snake[iTwo -1].snakeX;
+    }
+
+    switch(gameInput)
+    {
+        case 'w':
+        --snake[0].snakeY;
+        break;
+        case 's':
+        ++snake[0].snakeY;
+        break;
+        case 'a':
+        --snake[0].snakeX;
+        break;
+        case 'd':
+        ++snake[0].snakeX;
+        break;
+        default:
+        break;
+    }
+
+    mvwprintw(gameW, snake[0].snakeY, snake[0].snakeX, "X");
+}
+
+char userInput(char input, char inputReset)
+{
+    while(true)
+    {
+        switch(input)
+        {
+            case 'w':
+            case 'a':
+            case 's':
+            case 'd':
+            return input;
+            break;
+            default: 
+            return inputReset;
+            break;
+        }
+    }
+}
+
+
 // bool returns true if user won!
 WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
 {
@@ -149,13 +200,15 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
 
     setUpGameWin(gameW, scoreW, y, x);
 
+    // enable no pause in exe with getch()
+    nodelay(gameW, TRUE);
+    char gameInput{'d'};
+    char inputReset{'d'};
+
     // init main snake!
-    std::deque<Snake> snake(2);
+    std::deque<Snake> snake(1);
     snake[0].snakeY = y/2;
     snake[0].snakeX = x/2;
-
-    snake[1].snakeY = snake[0].snakeY;
-    snake[1].snakeX = snake[0].snakeX - 1;
 
     // sets interval that snake moves.
     auto interval{ std::chrono::milliseconds(100) };
@@ -171,17 +224,19 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
             return WinCode::Lost;
         }
 
-        // user input here
+        inputReset = gameInput;
+        gameInput = wgetch(gameW);
+        gameInput = userInput(gameInput, inputReset);
+
+
+        
+
 
         if (currentTime - lastTime >= interval)
         {
-            for (std::size_t i{0}; i < snake.size(); ++i)
-            {
-                mvwprintw(gameW, snake[0].snakeY, snake[i].snakeX, " ");
-                wrefresh(gameW);
-            }
+            updateSnake(snake, gameW, gameInput);
 
-            
+
 
             // resets timer and lets thread sleep to avoid infinite loop buffer
             lastTime = currentTime;
