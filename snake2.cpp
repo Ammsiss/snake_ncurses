@@ -10,8 +10,6 @@
 namespace Random
 {
     std::mt19937 mt{ std::random_device{}() };
-    std::uniform_int_distribution<int> gridX{};
-    std::uniform_int_distribution<int> gridY{};
 }
 
 struct Snake
@@ -21,6 +19,12 @@ struct Snake
 
     Snake() = default;
     Snake (int x, int y) : snakeY(x), snakeX(y) {}
+};
+
+struct Pellet
+{
+    int pelletY{};
+    int pelletX{};
 };
 
 enum class MenuCode
@@ -132,7 +136,7 @@ void setUpGameWin(WINDOW* gameW, WINDOW* scoreW, int y, int x)
 // bool returns true if went out of bounds
 bool outOfBounds(int y, int x, std::deque<Snake> snake)
 {
-    if (snake[0].snakeY == 0 || snake[0].snakeY == (y - 1) || snake[0].snakeX == 0 || snake[0].snakeX == (x - 1))
+    if (snake[0].snakeY <= 0 || snake[0].snakeY >= (y - 1) || snake[0].snakeX <= 0 || snake[0].snakeX >= (x - 1))
     {
         return true;
     }
@@ -142,16 +146,25 @@ bool outOfBounds(int y, int x, std::deque<Snake> snake)
     }
 }
 
-void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput)
+
+
+void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput, bool pelletCollected)
 {
-    mvwprintw(gameW, snake[snake.size() - 1].snakeY, snake[snake.size() - 1].snakeX, " ");
+    if (pelletCollected)
+    {
+        snake.push_back({snake[snake.size() - 1].snakeY, snake[snake.size() - 1].snakeX});
+    }
+    else
+    {
+        mvwprintw(gameW, snake[snake.size() - 1].snakeY, snake[snake.size() - 1].snakeX, " ");
+    }
 
     for (int iTwo{1}; iTwo <= snake.size() - 1; ++iTwo)
     {
         snake[iTwo].snakeY = snake[iTwo - 1].snakeY;
-        snake[iTwo].snakeX = snake[iTwo -1].snakeX;
+        snake[iTwo].snakeX = snake[iTwo - 1].snakeX;
     }
-
+    
     switch(gameInput)
     {
         case 'w':
@@ -161,16 +174,17 @@ void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput)
         ++snake[0].snakeY;
         break;
         case 'a':
-        --snake[0].snakeX;
+        snake[0].snakeX -= 2;
         break;
         case 'd':
-        ++snake[0].snakeX;
+        snake[0].snakeX += 2;
         break;
         default:
         break;
     }
 
     mvwprintw(gameW, snake[0].snakeY, snake[0].snakeX, "X");
+    wrefresh(gameW);
 }
 
 char userInput(char input, char inputReset)
@@ -192,6 +206,11 @@ char userInput(char input, char inputReset)
     }
 }
 
+void printScore(WINDOW* scoreW, int pelletCount)
+{
+    mvwprintw(scoreW, 1, 9, "%d", pelletCount * 100);
+    wrefresh(scoreW);
+}
 
 // bool returns true if user won!
 WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
@@ -210,8 +229,26 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
     snake[0].snakeY = y/2;
     snake[0].snakeX = x/2;
 
-    // sets interval that snake moves.
-    auto interval{ std::chrono::milliseconds(100) };
+    // init pellet stuff!
+    int pelletCount{0};
+    Pellet pelletCordinates{};
+    std::uniform_int_distribution<int> gridX{};
+    if (x % 2 == 0)
+    {
+        gridX = std::uniform_int_distribution<int>{ 0, (x - 2) / 2 };
+    }
+    else
+    {
+        gridX = std::uniform_int_distribution<int>{ 0, x / 2};
+    }
+    std::uniform_int_distribution<int> gridY{ 1, (y - 2)};
+    pelletCordinates.pelletY = gridY(Random::mt);
+    pelletCordinates.pelletX = (2 * gridX(Random::mt) + 1);
+    bool spawnFirstPellet{true};
+    bool pelletCollected{false};
+
+    // sets interval that snake moves../n
+    auto interval{ std::chrono::milliseconds(50) };
     auto lastTime{ std::chrono::high_resolution_clock::now() };
     while (true)
     {
@@ -228,15 +265,30 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
         gameInput = wgetch(gameW);
         gameInput = userInput(gameInput, inputReset);
 
+        if (spawnFirstPellet)
+        {
+            mvwprintw(gameW, pelletCordinates.pelletY, pelletCordinates.pelletX, "*");
+            spawnFirstPellet = false;
+        }
 
-        
 
 
         if (currentTime - lastTime >= interval)
         {
-            updateSnake(snake, gameW, gameInput);
+            if (snake[0].snakeY == pelletCordinates.pelletY && snake[0].snakeX == pelletCordinates.pelletX)
+            {
+                // randomizes pellet position and increases pelletCount and prints score.
+                pelletCordinates.pelletY = gridY(Random::mt);
+                pelletCordinates.pelletX = (2 * gridX(Random::mt) + 1);
+                ++pelletCount;
+                printScore(scoreW, pelletCount);
+                mvwprintw(gameW, pelletCordinates.pelletY, pelletCordinates.pelletX, "*");
+                wrefresh(gameW);
+                pelletCollected = true;
+            }
 
-
+            updateSnake(snake, gameW, gameInput, pelletCollected);
+            pelletCollected = false;
 
             // resets timer and lets thread sleep to avoid infinite loop buffer
             lastTime = currentTime;
