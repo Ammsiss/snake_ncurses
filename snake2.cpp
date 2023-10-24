@@ -210,6 +210,19 @@ void printScore(WINDOW* scoreW, int pelletCount)
     wrefresh(scoreW);
 }
 
+bool checkDie(const std::deque<Snake>& snake)
+{
+    for (std::size_t i{1}; i < snake.size(); ++i)
+    {
+        if (snake[0].snakeY == snake[i].snakeY && snake[0].snakeX == snake[i].snakeX)
+        {
+            return true;
+        }    
+    }
+
+    return false;
+}
+
 // bool returns true if user won!
 WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
 {
@@ -233,7 +246,7 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
     {
         snake[0].snakeX = (x / 2);
     }
-    
+
     // init pellet stuff!
     int pelletCount{0};
     Pellet pelletCordinates{};
@@ -244,16 +257,16 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
     }
     else if (x % 2 != 0)
     {
-        gridX = std::uniform_int_distribution<int>{ 0, x / 2 };
+        gridX = std::uniform_int_distribution<int>{ 0, (x / 2) };
     }
     std::uniform_int_distribution<int> gridY{ 1, (y - 2)};
     pelletCordinates.pelletY = gridY(Random::mt);
-    pelletCordinates.pelletX = (2 * gridX(Random::mt) + 1);
+    pelletCordinates.pelletX = ((2 * gridX(Random::mt)) + 1);
     bool spawnFirstPellet{true};
     bool pelletCollected{false};
 
     // sets interval that snake moves../n
-    auto interval{ std::chrono::milliseconds(300) };
+    auto interval{ std::chrono::milliseconds(150) };
     auto lastTime{ std::chrono::high_resolution_clock::now() };
     while (true)
     {
@@ -284,7 +297,7 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
             {
                 // randomizes pellet position and increases pelletCount and prints score.
                 pelletCordinates.pelletY = gridY(Random::mt);
-                pelletCordinates.pelletX = (2 * gridX(Random::mt) + 1);
+                pelletCordinates.pelletX = ((2 * gridX(Random::mt)) + 1);
                 ++pelletCount;
                 printScore(scoreW, pelletCount);
                 mvwprintw(gameW, pelletCordinates.pelletY, pelletCordinates.pelletX, "*");
@@ -294,10 +307,15 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
 
             updateSnake(snake, gameW, gameInput, pelletCollected);
             pelletCollected = false;
+            
+            if (checkDie(snake))
+            {
+                return WinCode::Lost;
+            }
 
             // resets timer and lets thread sleep to avoid infinite loop buffer
             lastTime = currentTime;
-            std::this_thread::sleep_for(50ms);
+            std::this_thread::sleep_for(25ms);
         }
     }
 }
