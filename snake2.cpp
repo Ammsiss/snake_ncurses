@@ -146,8 +146,6 @@ bool outOfBounds(int y, int x, std::deque<Snake> snake)
     }
 }
 
-
-
 void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput, bool pelletCollected)
 {
     if (pelletCollected)
@@ -159,7 +157,7 @@ void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput, bool p
         mvwprintw(gameW, snake[snake.size() - 1].snakeY, snake[snake.size() - 1].snakeX, " ");
     }
 
-    for (int iTwo{1}; iTwo <= snake.size() - 1; ++iTwo)
+    for (int iTwo{static_cast<int>(snake.size() - 1)}; iTwo >= 1; --iTwo)
     {
         snake[iTwo].snakeY = snake[iTwo - 1].snakeY;
         snake[iTwo].snakeX = snake[iTwo - 1].snakeX;
@@ -226,9 +224,16 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
 
     // init main snake!
     std::deque<Snake> snake(1);
-    snake[0].snakeY = y/2;
-    snake[0].snakeX = x/2;
-
+    snake[0].snakeY = y / 2;
+    if (x % 2 == 0)
+    {
+        snake[0].snakeX = (x / 2) + 1;
+    }
+    else
+    {
+        snake[0].snakeX = (x / 2);
+    }
+    
     // init pellet stuff!
     int pelletCount{0};
     Pellet pelletCordinates{};
@@ -237,9 +242,9 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
     {
         gridX = std::uniform_int_distribution<int>{ 0, (x - 2) / 2 };
     }
-    else
+    else if (x % 2 != 0)
     {
-        gridX = std::uniform_int_distribution<int>{ 0, x / 2};
+        gridX = std::uniform_int_distribution<int>{ 0, x / 2 };
     }
     std::uniform_int_distribution<int> gridY{ 1, (y - 2)};
     pelletCordinates.pelletY = gridY(Random::mt);
@@ -248,7 +253,7 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
     bool pelletCollected{false};
 
     // sets interval that snake moves../n
-    auto interval{ std::chrono::milliseconds(50) };
+    auto interval{ std::chrono::milliseconds(300) };
     auto lastTime{ std::chrono::high_resolution_clock::now() };
     while (true)
     {
