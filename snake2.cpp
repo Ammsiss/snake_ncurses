@@ -150,8 +150,10 @@ void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput, bool p
 {
     // prints pellet coords
     mvwprintw(gameW, 1, 1, "pellet Y: ");
+    mvwprintw(gameW, 1, 11, "  ");
     mvwprintw(gameW, 1, 11, "%d", pelletCordinates.pelletY);
     mvwprintw(gameW, 2, 1, "pellet X: ");
+    mvwprintw(gameW, 2, 11, "  ");
     mvwprintw(gameW, 2, 11, "%d", pelletCordinates.pelletX);
 
     // prints x and y dimensions of gameW
@@ -253,7 +255,7 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x)
     // init main snake!
     std::deque<Snake> snake(1);
     snake[0].snakeY = y / 2;
-    if (x % 2 == 0)
+    if ((x / 2) % 2 == 0)
     {
         snake[0].snakeX = (x / 2) + 1;
     }
@@ -268,11 +270,11 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x)
     std::uniform_int_distribution<int> gridX{};
     if (x % 2 == 0)
     {
-        gridX = std::uniform_int_distribution<int>{ 0, (x - 4) / 2 };
+        gridX = std::uniform_int_distribution<int>{ 0, (x - 2) / 2 };
     }
     else if (x % 2 != 0)
     {
-        gridX = std::uniform_int_distribution<int>{ 0, (x / 2) };
+        gridX = std::uniform_int_distribution<int>{ 0, (x / 2) - 1};
     }
     std::uniform_int_distribution<int> gridY{ 1, (y - 2)};
     pelletCordinates.pelletY = gridY(Random::mt);
