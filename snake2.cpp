@@ -146,8 +146,21 @@ bool outOfBounds(int y, int x, std::deque<Snake> snake)
     }
 }
 
-void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput, bool pelletCollected)
+void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput, bool pelletCollected, Pellet pelletCordinates, int y, int x)
 {
+    // prints pellet coords
+    mvwprintw(gameW, 1, 1, "pellet Y: ");
+    mvwprintw(gameW, 1, 11, "%d", pelletCordinates.pelletY);
+    mvwprintw(gameW, 2, 1, "pellet X: ");
+    mvwprintw(gameW, 2, 11, "%d", pelletCordinates.pelletX);
+
+    // prints x and y dimensions of gameW
+    mvwprintw(gameW, 3, 1, "gameW Y: ");
+    mvwprintw(gameW, 3, 9, "%d", y);
+    mvwprintw(gameW, 4, 1, "gameW X: ");
+    mvwprintw(gameW, 4, 9, "%d", x);
+    wrefresh(gameW);
+
     if (pelletCollected)
     {
         snake.push_back({snake[snake.size() - 1].snakeY, snake[snake.size() - 1].snakeX});
@@ -206,6 +219,8 @@ char userInput(char input, char inputReset)
 
 void printScore(WINDOW* scoreW, int pelletCount)
 {
+    box(scoreW, 0, 0);
+    mvwprintw(scoreW, 1, 1, "SCORE: ");
     mvwprintw(scoreW, 1, 9, "%d", pelletCount * 100);
     wrefresh(scoreW);
 }
@@ -224,7 +239,7 @@ bool checkDie(const std::deque<Snake>& snake)
 }
 
 // bool returns true if user won!
-WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
+WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x)
 {
     using namespace std::literals::chrono_literals;
 
@@ -253,7 +268,7 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
     std::uniform_int_distribution<int> gridX{};
     if (x % 2 == 0)
     {
-        gridX = std::uniform_int_distribution<int>{ 0, (x - 2) / 2 };
+        gridX = std::uniform_int_distribution<int>{ 0, (x - 4) / 2 };
     }
     else if (x % 2 != 0)
     {
@@ -305,7 +320,7 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, int y, int x)
                 pelletCollected = true;
             }
 
-            updateSnake(snake, gameW, gameInput, pelletCollected);
+            updateSnake(snake, gameW, gameInput, pelletCollected, pelletCordinates, y, x);
             pelletCollected = false;
             
             if (checkDie(snake))
