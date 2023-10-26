@@ -200,23 +200,26 @@ void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput, bool p
     wrefresh(gameW);
 }
 
-char userInput(char input, char inputReset)
+char userInput(char gameInput, char inputReset)
 {
-    while(true)
+    switch(gameInput)
     {
-        switch(input)
-        {
-            case 'w':
-            case 'a':
-            case 's':
-            case 'd':
-            return input;
-            break;
-            default: 
-            return inputReset;
-            break;
-        }
+        case 'w':
+        if (inputReset == 's') { break; }
+        else { return gameInput; }
+        case 'a':
+        if (inputReset == 'd') { break; }
+        else { return gameInput; }
+        case 's':
+        if (inputReset == 'w') { break; }
+        else { return gameInput; }
+        case 'd':
+        if (inputReset == 'a') { break; }
+        else { return gameInput; }
+        default: 
+        return inputReset;
     }
+    return inputReset;
 }
 
 void printScore(WINDOW* scoreW, int pelletCount)
@@ -247,11 +250,6 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x)
 
     setUpGameWin(gameW, scoreW, y, x);
 
-    // enable no pause in exe with getch()
-    nodelay(gameW, TRUE);
-    char gameInput{'d'};
-    char inputReset{'d'};
-
     // init main snake!
     std::deque<Snake> snake(1);
     snake[0].snakeY = y / 2;
@@ -270,7 +268,7 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x)
     std::uniform_int_distribution<int> gridX{};
     if (x % 2 == 0)
     {
-        gridX = std::uniform_int_distribution<int>{ 0, (x - 2) / 2 };
+        gridX = std::uniform_int_distribution<int>{ 0, (x - 4) / 2 };
     }
     else if (x % 2 != 0)
     {
@@ -281,6 +279,11 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x)
     pelletCordinates.pelletX = ((2 * gridX(Random::mt)) + 1);
     bool spawnFirstPellet{true};
     bool pelletCollected{false};
+
+    // enable no pause in exe with getch()
+    nodelay(gameW, TRUE);
+    char gameInput{'d'};
+    char inputReset{};
 
     // sets interval that snake moves../n
     auto interval{ std::chrono::milliseconds(150) };
