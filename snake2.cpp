@@ -196,7 +196,36 @@ void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput, bool p
         break;
     }
 
-    mvwprintw(gameW, snake[0].snakeY, snake[0].snakeX, "X");
+    if (gameInput == 'w')
+    {
+        mvwprintw(gameW, snake[0].snakeY, snake[0].snakeX, "v");
+    }
+    else if (gameInput == 'a')
+    {
+        mvwprintw(gameW, snake[0].snakeY, snake[0].snakeX, ">");
+    }
+    else if (gameInput == 's')
+    {
+        mvwprintw(gameW, snake[0].snakeY, snake[0].snakeX, "^");
+    }
+    else if (gameInput == 'd')
+    {
+        mvwprintw(gameW, snake[0].snakeY, snake[0].snakeX, "<");
+    }
+
+    for (std::size_t i{1}; i < snake.size(); ++i)
+    {
+        if (i % 2 == 0)
+        {
+            mvwprintw(gameW, snake[i].snakeY, snake[i].snakeX, "x");
+        }
+        else
+        {
+            mvwprintw(gameW, snake[i].snakeY, snake[i].snakeX, "+");
+
+        }
+    }
+
     wrefresh(gameW);
 }
 
