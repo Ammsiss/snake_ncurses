@@ -149,6 +149,7 @@ bool outOfBounds(int y, int x, std::deque<Snake> snake)
 void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput, bool pelletCollected, Pellet pelletCordinates, int y, int x)
 {
     // prints pellet coords
+    /*
     mvwprintw(gameW, 1, 1, "pellet Y: ");
     mvwprintw(gameW, 1, 11, "  ");
     mvwprintw(gameW, 1, 11, "%d", pelletCordinates.pelletY);
@@ -162,6 +163,7 @@ void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput, bool p
     mvwprintw(gameW, 4, 1, "gameW X: ");
     mvwprintw(gameW, 4, 9, "%d", x);
     wrefresh(gameW);
+    */
 
     if (pelletCollected)
     {
@@ -345,10 +347,23 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x)
             if (snake[0].snakeY == pelletCordinates.pelletY && snake[0].snakeX == pelletCordinates.pelletX)
             {
                 // randomizes pellet position and increases pelletCount and prints score.
-                pelletCordinates.pelletY = gridY(Random::mt);
-                pelletCordinates.pelletX = ((2 * gridX(Random::mt)) + 1);
+                bool insideSnake{true};
+                while(insideSnake)
+                {
+                    insideSnake = false;
+                    pelletCordinates.pelletY = gridY(Random::mt);
+                    pelletCordinates.pelletX = ((2 * gridX(Random::mt)) + 1);
+
+                    for (std::size_t i{1}; i < snake.size(); ++i)
+                    {
+                        if (pelletCordinates.pelletY == snake[i].snakeY && pelletCordinates.pelletX == snake[i].snakeX)
+                        {
+                            insideSnake = true;
+                        }
+                    }
+                }
                 ++pelletCount;
-                printScore(scoreW, pelletCount);
+                //  printScore(scoreW, pelletCount);
                 mvwprintw(gameW, pelletCordinates.pelletY, pelletCordinates.pelletX, "*");
                 wrefresh(gameW);
                 pelletCollected = true;
