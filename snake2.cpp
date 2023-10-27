@@ -40,6 +40,15 @@ enum class WinCode
     Lost,
 };
 
+enum class SnakeColor
+{
+    Red,
+    Blue,
+    Green,
+    Yellow,
+    Magenta,
+};
+
 // creates game window to fit stdscr
 WINDOW* initGameWindow(int y, int x)
 {
@@ -146,7 +155,7 @@ bool outOfBounds(int y, int x, std::deque<Snake> snake)
     }
 }
 
-void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput, bool pelletCollected, Pellet pelletCordinates, int y, int x)
+void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput, bool pelletCollected, Pellet pelletCordinates, int y, int x, SnakeColor snakeColor)
 {
     // prints pellet coords
     /*
@@ -165,6 +174,16 @@ void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput, bool p
     wrefresh(gameW);
     */
 
+    start_color();
+
+    init_color(COLOR_BLACK, 0, 0, 0);
+    init_pair(0, COLOR_WHITE, COLOR_BLACK);
+    init_pair(1, COLOR_RED, COLOR_BLACK);
+    init_pair(2, COLOR_BLUE, COLOR_BLACK);
+    init_pair(3, COLOR_GREEN, COLOR_BLACK);
+    init_pair(4, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(5, COLOR_MAGENTA, COLOR_BLACK);
+
     if (pelletCollected)
     {
         snake.push_back({snake[snake.size() - 1].snakeY, snake[snake.size() - 1].snakeX});
@@ -180,6 +199,27 @@ void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput, bool p
         snake[iTwo].snakeX = snake[iTwo - 1].snakeX;
     }
     
+    switch(snakeColor)
+    {
+        case SnakeColor::Red:
+        wattron(gameW, COLOR_PAIR(1));
+        break;
+        case SnakeColor::Blue:
+        wattron(gameW, COLOR_PAIR(2));
+        break;
+        case SnakeColor::Green:
+        wattron(gameW, COLOR_PAIR(3));
+        break;
+        case SnakeColor::Yellow:
+        wattron(gameW, COLOR_PAIR(4));
+        break;
+        case SnakeColor::Magenta:
+        wattron(gameW, COLOR_PAIR(5));
+        break;
+        default:
+        break;
+    }
+
     switch(gameInput)
     {
         case 'w':
@@ -226,6 +266,27 @@ void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput, bool p
             mvwprintw(gameW, snake[i].snakeY, snake[i].snakeX, "+");
 
         }
+    }
+
+    switch(snakeColor)
+    {
+        case SnakeColor::Red:
+        wattroff(gameW, COLOR_PAIR(1));
+        break;
+        case SnakeColor::Blue:
+        wattroff(gameW, COLOR_PAIR(2));
+        break;
+        case SnakeColor::Green:
+        wattroff(gameW, COLOR_PAIR(3));
+        break;
+        case SnakeColor::Yellow:
+        wattroff(gameW, COLOR_PAIR(4));
+        break;
+        case SnakeColor::Magenta:
+        wattroff(gameW, COLOR_PAIR(5));
+        break;
+        default:
+        break;
     }
 
     wrefresh(gameW);
@@ -282,7 +343,7 @@ void resetScore(WINDOW* scoreW)
 }
 
 // bool returns true if user won!
-WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x)
+WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x, SnakeColor snakeColor)
 {
     using namespace std::literals::chrono_literals;
 
@@ -377,7 +438,7 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x)
                 pelletCollected = true;
             }
 
-            updateSnake(snake, gameW, gameInput, pelletCollected, pelletCordinates, y, x);
+            updateSnake(snake, gameW, gameInput, pelletCollected, pelletCordinates, y, x, snakeColor);
             pelletCollected = false;
             
             if (checkDie(snake))
@@ -394,15 +455,78 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x)
 }
 
 // returns construction message
-void settingsLoop(WINDOW* scoreW, WINDOW* gameW, int y, int x)
+SnakeColor settingsLoop(WINDOW* scoreW, WINDOW* gameW, int y, int x)
 {
-    mvwprintw(gameW, y/2, x/2 - 10, "UNDER CONSTSTRUCTION!");
-    wclear(scoreW);
     box(gameW, 0, 0);
-    wrefresh(scoreW);
-    wrefresh(gameW);
-    wgetch(gameW);
-    wclear(gameW);
+
+    mvwprintw(gameW, y/2 - 5, x/2 - 10, "CHOOSE A COLOR FOR YOUR SNAKE!");
+    std::vector<std::string> options{ "1) RED", "2) BLUE", "3) GREEN", "4) YELLOW", "5) MAGENTA" };
+
+    std::size_t selection{0};
+
+    while(true)
+    {
+        for (std::size_t i{0}; i < options.size(); ++i)
+        {
+            if (selection == i)
+            {
+                wattron(gameW, A_BLINK);
+                wattron(gameW, A_REVERSE);
+                mvwprintw(gameW, ((y/2 - 5) + (2 * (i + 1))), (x/2), "%s", options[i].c_str());
+                wattroff(gameW, A_BLINK);
+                wattroff(gameW, A_REVERSE);
+            }
+            else
+            {
+                mvwprintw(gameW, ((y/2 - 5) + (2 * (i + 1))), (x/2), "%s", options[i].c_str());
+            }
+        }
+
+        int userInput{ wgetch(gameW) };
+
+        switch(userInput)
+        {
+            case 'w':
+            if (selection != 0)
+            {
+                --selection;
+                break;
+            }
+            break;
+            case 's':
+            if (selection != 4)
+            {
+                ++selection;
+                break;
+            }
+            break;
+            default:
+            break;
+        }
+
+        if (userInput == '\n' && selection == 0)
+        {
+            return SnakeColor::Red;
+        }
+        else if (userInput == '\n' && selection == 1)
+        {
+            return SnakeColor::Blue;
+        }
+        else if (userInput == '\n' && selection == 2)
+        {
+            return SnakeColor::Green;
+        }
+        else if (userInput == '\n' && selection == 3)
+        {
+            return SnakeColor::Yellow;
+        }
+        else if (userInput == '\n' && selection == 4)
+        {
+            return SnakeColor::Magenta;
+        }
+
+        wrefresh(gameW);
+    }
 }
 
 
@@ -415,17 +539,12 @@ void exitGame(WINDOW* scoreW, WINDOW* gameW, int y, int x)
     wrefresh(gameW);
 }
 
-/* void loseMessage()
+void loseMessage(WINDOW* gameW, int y, int x)
 {
-    
+    mvwprintw(gameW, y/2, x/2 - 5, "YOU LOSE!");
+    wrefresh(gameW);
+    getch();
 }
-*/
-
-/* void winMessage()
-{
-
-}
-*/
 
 int main()
 {
@@ -447,11 +566,17 @@ int main()
     WINDOW* gameW{ initGameWindow(y, x)};
     WINDOW* scoreW{ initScoreWindow(x)};
 
+    MenuCode menuSelection{};
+
+    SnakeColor snakeColor{ SnakeColor::Green };
+
     // main loop
     for(int i{0}; i < 10; ++i)
     {
+        wclear(gameW);
+
         // gets user menu selection. Play, settings, exit.
-        MenuCode menuSelection{ menuLoop(gameW) };
+        menuSelection = menuLoop(gameW);
         wclear(gameW);
 
         if (menuSelection == MenuCode::Exit)
@@ -462,20 +587,16 @@ int main()
         
         if (menuSelection == MenuCode::Settings)
         {
-            settingsLoop(scoreW, gameW, y, x);
+            snakeColor = settingsLoop(scoreW, gameW, y, x);
         }
 
         if (menuSelection == MenuCode::Play)
         {
-            WinCode wonOrLost{ gameLoop(gameW, scoreW, y, x) };
+            WinCode wonOrLost{ gameLoop(gameW, scoreW, y, x, snakeColor) };
 
-            if (wonOrLost == WinCode::Won) 
+            if (wonOrLost == WinCode::Lost)
             {
-                // winMessage();
-            }
-            else if (wonOrLost == WinCode::Lost)
-            {
-                // loseMessage();
+                loseMessage(gameW, y, x);
             }
         }
     }
