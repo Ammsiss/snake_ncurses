@@ -256,6 +256,7 @@ char userInput(char gameInput, char inputReset)
 void printScore(WINDOW* scoreW, int pelletCount)
 {
     box(scoreW, 0, 0);
+    mvwprintw(scoreW, 1, 1, "             ");
     mvwprintw(scoreW, 1, 1, "SCORE: ");
     mvwprintw(scoreW, 1, 9, "%d", pelletCount * 100);
     wrefresh(scoreW);
@@ -272,6 +273,12 @@ bool checkDie(const std::deque<Snake>& snake)
     }
 
     return false;
+}
+
+void resetScore(WINDOW* scoreW)
+{
+    mvwprintw(scoreW, 1, 1, "             ");
+    mvwprintw(scoreW, 1, 1, "SCORE: ");
 }
 
 // bool returns true if user won!
@@ -327,6 +334,7 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x)
         // checks if user went out of bounds
         if (outOfBounds(y, x, snake))
         {
+            resetScore(scoreW);
             return WinCode::Lost;
         }
 
@@ -363,7 +371,7 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x)
                     }
                 }
                 ++pelletCount;
-                //  printScore(scoreW, pelletCount);
+                printScore(scoreW, pelletCount);
                 mvwprintw(gameW, pelletCordinates.pelletY, pelletCordinates.pelletX, "*");
                 wrefresh(gameW);
                 pelletCollected = true;
@@ -374,6 +382,7 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x)
             
             if (checkDie(snake))
             {
+                resetScore(scoreW);
                 return WinCode::Lost;
             }
 
