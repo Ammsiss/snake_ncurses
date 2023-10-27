@@ -40,6 +40,13 @@ enum class WinCode
     Lost,
 };
 
+enum class Speed
+{
+    slow,
+    medium,
+    insane,
+};
+
 enum class SnakeColor
 {
     Red,
@@ -131,8 +138,75 @@ MenuCode menuLoop(WINDOW* gameW)
         }
 }
 
-void setUpGameWin(WINDOW* gameW, WINDOW* scoreW, int y, int x)
+Speed setUpGameWin(WINDOW* gameW, WINDOW* scoreW, int y, int x)
 {
+    mvwprintw(gameW, y/2 - 5, x/2 - 10, "CHOOSE A SPEED!!!");
+    std::vector<std::string> options{ "SLOW", "MEDIUM", "INSANE"};
+
+    std::size_t selection{0};
+
+    Speed speed{};
+
+    while(true)
+    {
+        for (std::size_t i{0}; i < options.size(); ++i)
+        {
+            if (selection == i)
+            {
+                wattron(gameW, A_BLINK);
+                wattron(gameW, A_REVERSE);
+                mvwprintw(gameW, ((y/2 - 5) + (2 * (i + 1))), (x/2) - 4, "%s", options[i].c_str());
+                wattroff(gameW, A_BLINK);
+                wattroff(gameW, A_REVERSE);
+            }
+            else
+            {
+                mvwprintw(gameW, ((y/2 - 5) + (2 * (i + 1))), (x/2) - 4, "%s", options[i].c_str());
+            }
+        }
+
+        int userInput{ wgetch(gameW) };
+
+        switch(userInput)
+        {
+            case 'w':
+            if (selection != 0)
+            {
+                --selection;
+                break;
+            }
+            break;
+            case 's':
+            if (selection != 2)
+            {
+                ++selection;
+                break;
+            }
+            break;
+            default:
+            break;
+        }
+
+        if (userInput == '\n' && selection == 0)
+        {
+            speed = Speed::slow;
+            break;
+        }
+        else if (userInput == '\n' && selection == 1)
+        {
+            speed = Speed::medium;
+            break;
+        }
+        else if (userInput == '\n' && selection == 2)
+        {
+            speed = Speed::insane;
+            break;
+        }
+
+        wrefresh(gameW);
+    }
+
+    wclear(gameW);
     // creae game box
     box(gameW, 0, 0);
     // create score box
@@ -140,6 +214,8 @@ void setUpGameWin(WINDOW* gameW, WINDOW* scoreW, int y, int x)
     mvwprintw(scoreW, 1, 1, "SCORE: ");
     wrefresh(gameW);
     wrefresh(scoreW);
+
+    return speed;
 }
 
 // bool returns true if went out of bounds
@@ -330,7 +406,27 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x, SnakeC
 {
     using namespace std::literals::chrono_literals;
 
-    setUpGameWin(gameW, scoreW, y, x);
+    Speed speed{};
+
+    speed = setUpGameWin(gameW, scoreW, y, x);
+    int speedMS{};
+
+    switch(speed)
+    {
+        case Speed::slow:
+        speedMS = 400;
+        break;
+        case Speed::medium:
+        speedMS = 150;
+        break;
+        case Speed::insane:
+        speedMS = 75;
+        break;
+        default:
+        speedMS = 150;
+        break;
+    }
+
 
     // init main snake!
     std::deque<Snake> snake(1);
@@ -368,7 +464,7 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x, SnakeC
     char inputReset{};
 
     // sets interval that snake moves../n
-    auto interval{ std::chrono::milliseconds(150) };
+    auto interval{ std::chrono::milliseconds(speedMS) };
     auto lastTime{ std::chrono::high_resolution_clock::now() };
     while (true)
     {
