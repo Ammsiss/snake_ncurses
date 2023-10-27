@@ -157,23 +157,6 @@ bool outOfBounds(int y, int x, std::deque<Snake> snake)
 
 void updateSnake(std::deque<Snake>& snake, WINDOW* gameW, char gameInput, bool pelletCollected, Pellet pelletCordinates, int y, int x, SnakeColor snakeColor)
 {
-    // prints pellet coords
-    /*
-    mvwprintw(gameW, 1, 1, "pellet Y: ");
-    mvwprintw(gameW, 1, 11, "  ");
-    mvwprintw(gameW, 1, 11, "%d", pelletCordinates.pelletY);
-    mvwprintw(gameW, 2, 1, "pellet X: ");
-    mvwprintw(gameW, 2, 11, "  ");
-    mvwprintw(gameW, 2, 11, "%d", pelletCordinates.pelletX);
-
-    // prints x and y dimensions of gameW
-    mvwprintw(gameW, 3, 1, "gameW Y: ");
-    mvwprintw(gameW, 3, 9, "%d", y);
-    mvwprintw(gameW, 4, 1, "gameW X: ");
-    mvwprintw(gameW, 4, 9, "%d", x);
-    wrefresh(gameW);
-    */
-
     start_color();
 
     init_color(COLOR_BLACK, 0, 0, 0);
@@ -460,7 +443,7 @@ SnakeColor settingsLoop(WINDOW* scoreW, WINDOW* gameW, int y, int x)
     box(gameW, 0, 0);
 
     mvwprintw(gameW, y/2 - 5, x/2 - 10, "CHOOSE A COLOR FOR YOUR SNAKE!");
-    std::vector<std::string> options{ "1) RED", "2) BLUE", "3) GREEN", "4) YELLOW", "5) MAGENTA" };
+    std::vector<std::string> options{ "1) $5.99$ RED", "2) $8.99$ BLUE", "3) $$15.99$$ GREEN", "4) $$$209.99$$$ BROWN", "5) $.99$ MAGENTA %50 off !!!" };
 
     std::size_t selection{0};
 
@@ -528,7 +511,6 @@ SnakeColor settingsLoop(WINDOW* scoreW, WINDOW* gameW, int y, int x)
         wrefresh(gameW);
     }
 }
-
 
 void exitGame(WINDOW* scoreW, WINDOW* gameW, int y, int x)
 {
@@ -608,8 +590,4 @@ int main()
     delwin(scoreW);
     endwin();
     return 0;
-    
 }
-
-
-// this is a update
