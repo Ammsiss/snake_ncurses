@@ -528,8 +528,8 @@ WinCode gameLoop(WINDOW* gameW, WINDOW* scoreW, const int y, const int x, SnakeC
 
             // resets timer and lets thread sleep to avoid infinite loop buffer
             lastTime = currentTime;
-            std::this_thread::sleep_for(25ms);
         }
+        std::this_thread::sleep_for(10ms);
     }
 }
 
